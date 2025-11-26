@@ -15,9 +15,9 @@ const body = Noto_Sans_Thai({
 });
 
 export const metadata: Metadata = {
-  title: "Where Wind Mind | Wuxia Worldbook",
+  title: "Where Winds Meet | Wuxia Worldbook",
   description:
-    "สารบัญข้อมูลและแรงบันดาลใจของ Where Wind Mind โลกเปิดแนว Wuxia ที่คุณออกแบบได้เอง",
+    "สารบัญข้อมูลและแรงบันดาลใจของ Where Winds Meet โลกเปิดแนว Wuxia ที่คุณออกแบบได้เอง",
 };
 
 export default function RootLayout({

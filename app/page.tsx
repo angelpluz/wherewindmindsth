@@ -1,6 +1,5 @@
 export default function Home() {
-  const heroBg =
-    "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1800&q=80";
+  const heroBg = "/img/topview.png";
   const fieldBg =
     "https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&w=1800&q=80";
 
@@ -364,14 +363,14 @@ export default function Home() {
         <div className="absolute inset-0 bg-gradient-to-b from-[#2f3138]/80 via-transparent to-transparent" />
       </div>
 
-      <header className="fixed inset-x-0 top-0 z-30 border-b border-white/10 bg-gradient-to-b from-[#2f3138]/95 via-[#2f3138]/85 to-transparent text-slate-100 backdrop-blur-xl">
+      <header className="fixed inset-x-0 top-0 z-30 border-b border-white/10 bg-gradient-to-b from-[#0d1520]/80 via-[#0d1520]/60 to-transparent text-slate-100 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full border border-amber-300/60 bg-amber-200/10 text-lg text-amber-200">
               风
             </div>
             <div>
-              <p className="kicker text-[10px]">Where Wind Mind</p>
+              <p className="kicker text-[10px]">Where Winds Meet</p>
               <p className="heading-contrast text-lg text-amber-100">
                 Game Codex
               </p>
@@ -406,39 +405,21 @@ export default function Home() {
       <main className="relative z-10">
         <section
           id="hero"
-          className="relative isolate flex min-h-screen items-center overflow-hidden"
+          className="relative isolate min-h-[65vh] overflow-hidden"
         >
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{ backgroundImage: `url(${heroBg})` }}
             aria-hidden
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-[#2f3138]/65 to-[#f3f1ed]/90" />
-          <div className="relative mx-auto flex max-w-6xl flex-col gap-10 px-6 pt-28 pb-16 text-slate-900 lg:flex-row lg:items-center">
-            <div className="max-w-2xl">
-              <p className="kicker text-sm">Game Codex / Library</p>
-              <h1 className="heading-contrast text-4xl leading-tight text-[#c7a35a] md:text-6xl">
-                Where Wind Mind
-              </h1>
-              <p className="mt-4 text-lg leading-relaxed text-slate-900/85">
-                สารบัญข้อมูล + ศูนย์รวมความรู้ของเกม ตามโครงสร้างที่ต้องมี
-                ครบทั้ง Lore, สายวิชา, ระบบเกม, ไอเทม, แผนที่ และเครื่องมือเสริม
-              </p>
-              <div className="mt-8 flex flex-wrap gap-4">
-                <a
-                  href="#master-index"
-                  className="rounded-full bg-gradient-to-r from-amber-300 to-orange-600 px-6 py-3 text-slate-950 shadow-lg shadow-amber-500/30 transition hover:translate-y-[-2px]"
-                >
-                  เปิดสารบัญใหญ่
-                </a>
-                <a
-                  href="#systems"
-                  className="rounded-full border border-black/15 px-5 py-3 text-slate-900 transition hover:border-amber-300/70 hover:text-[#c7a35a]"
-                >
-                  ดูระบบเกม
-                </a>
-              </div>
-            </div>
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0b0f16]/60 via-transparent to-[#f3f1ed]/80" />
+          <div className="relative mx-auto flex max-w-6xl flex-col items-center justify-end px-6 pb-8 pt-32 text-center text-slate-100">
+            <a
+              href="#master-index"
+              className="rounded-full border border-white/40 bg-white/10 px-5 py-2 text-sm text-white transition hover:border-amber-300/70 hover:text-amber-100"
+            >
+              ไปที่สารบัญใหญ่
+            </a>
           </div>
         </section>
 
