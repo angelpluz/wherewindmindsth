@@ -6,6 +6,11 @@ export default function Home() {
 
   const masterIndex = [
     {
+      id: "attributes",
+      title: "Attributes & Builds",
+      desc: "ธาตุหลัก ปราณเฉพาะ และบิลด์แนะนำพร้อมสเตตัส",
+    },
+    {
       id: "lore",
       title: "ฐานข้อมูลโลก / Lore Codex",
       desc: "เรื่องเล่า Jianghu, สำนัก, ตัวละคร, เมือง, เหตุการณ์",
@@ -433,55 +438,6 @@ export default function Home() {
                   ดูระบบเกม
                 </a>
               </div>
-              <div className="mt-8 grid grid-cols-2 gap-4 md:max-w-lg">
-                {[
-                  { label: "จุดประสงค์", value: "Mockup Codex / Library" },
-                  { label: "หมวดหลัก", value: "14 หมวดพร้อมฟีเจอร์เสริม" },
-                  { label: "แนวทาง", value: "Wuxia หมึกทอง & ลมเย็น" },
-                  { label: "สถานะ", value: "พร้อมวางบน Vercel" },
-                ].map((item) => (
-                  <div
-                    key={item.label}
-                    className="glass-panel rounded-xl px-4 py-3 text-sm text-slate-900"
-                  >
-                    <p className="text-xs uppercase tracking-[0.18em] text-amber-200/80">
-                      {item.label}
-                    </p>
-                    <p className="mt-1 font-semibold text-slate-900">
-                      {item.value}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <div className="glass-panel relative mt-4 w-full max-w-md self-end overflow-hidden rounded-3xl border border-black/10 bg-white/50 p-6 lg:mt-0">
-              <div className="absolute inset-0 bg-gradient-to-br from-white/70 via-amber-100/30 to-[#d7d9e1]/60" />
-              <div className="relative">
-                <p className="kicker text-sm">สิ่งที่พร้อมทำต่อ</p>
-                <p className="heading-contrast mt-2 text-xl text-[#c7a35a]">
-                  ฟีเจอร์เด่นของเว็บแฟนไซต์
-                </p>
-                <div className="mt-4 flex flex-col gap-3 text-sm text-slate-800/90">
-                  <p>• Interactive Map + Skill Planner</p>
-                  <p>• ฐานข้อมูลสกิล/ไอเทมค้นหาได้</p>
-                  <p>• แพทช์โน้ตแปลไทย + ข่าวรวบรวม</p>
-                </div>
-                <div className="mt-4 grid grid-cols-2 gap-3 text-xs">
-                  <span className="gradient-border rounded-xl px-4 py-3 text-center text-amber-100">
-                    Lore & Timeline
-                  </span>
-                  <span className="gradient-border rounded-xl px-4 py-3 text-center text-amber-100">
-                    PvE/PvP Guides
-                  </span>
-                  <span className="gradient-border rounded-xl px-4 py-3 text-center text-amber-100">
-                    Tools
-                  </span>
-                  <span className="gradient-border rounded-xl px-4 py-3 text-center text-amber-100">
-                    Community
-                  </span>
-                </div>
-              </div>
             </div>
           </div>
         </section>
@@ -512,7 +468,9 @@ export default function Home() {
               {masterIndex.map((item, idx) => (
                 <a
                   key={item.id}
-                  href={`#${item.id}`}
+                    href={
+                      item.id === "attributes" ? "/attributes" : `#${item.id}`
+                    }
                   className="relative overflow-hidden rounded-2xl border border-black/10 bg-white/70 p-4 transition hover:-translate-y-1 hover:border-amber-200/70 hover:shadow-lg hover:shadow-amber-500/20"
                 >
                   <div
@@ -539,130 +497,7 @@ export default function Home() {
           </div>
         </section>
 
-        {sections.map((section) => (
-          <section
-            key={section.id}
-            id={section.id}
-            className="relative mx-auto max-w-6xl px-6 pb-12 lg:pb-16"
-          >
-            <div className="glass-panel overflow-hidden rounded-3xl border border-black/10 p-8">
-              <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div>
-                  <p className="kicker text-xs">
-                    {section.number}. {section.kicker}
-                  </p>
-                  <h2 className="heading-contrast text-3xl text-[#c7a35a]">
-                    {section.title}
-                  </h2>
-                  <p className="mt-2 max-w-3xl text-sm text-slate-900/80">
-                    {section.summary}
-                  </p>
-                </div>
-                <span className="rounded-full border border-amber-300/60 px-4 py-2 text-xs text-[#c7a35a]">
-                  Section {section.number}
-                </span>
-              </div>
 
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
-                {section.groups.map((group) => (
-                  <div
-                    key={group.title}
-                    className="rounded-2xl border border-black/10 bg-white/70 p-5"
-                  >
-                    <p className="heading-contrast text-lg text-[#c7a35a]">
-                      {group.title}
-                    </p>
-                    <ul className="mt-2 space-y-1 text-sm text-slate-900/85">
-                      {group.items.map((item) => (
-                        <li key={item} className="flex gap-2">
-                          <span className="text-[#c7a35a]">—</span>
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-
-              {section.id === "map" && (
-                <div className="mt-6 overflow-hidden rounded-2xl border border-black/10">
-                  <div
-                    className="relative h-52 bg-cover bg-center"
-                    style={{ backgroundImage: `url(${fieldBg})` }}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/60 to-transparent" />
-                    <div className="absolute bottom-3 left-4 right-4 flex flex-wrap gap-2 text-xs">
-                      {[
-                        "World Boss Pins",
-                        "Secret Manuals",
-                        "Qi Nodes",
-                        "Hidden Paths",
-                        "Rare Loot",
-                      ].map((chip) => (
-                        <span
-                          key={chip}
-                          className="rounded-full bg-white/10 px-3 py-2 text-amber-100"
-                        >
-                          {chip}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </section>
-        ))}
-
-        <section
-          id="cta"
-          className="relative mx-auto max-w-6xl px-6 pb-16 lg:pb-24"
-        >
-          <div className="glass-panel overflow-hidden rounded-3xl border border-amber-200/40 bg-gradient-to-r from-slate-900 via-slate-900/80 to-slate-800 p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="kicker text-xs">พร้อมต่อยอด</p>
-                <h2 className="heading-contrast text-3xl text-amber-100">
-                  โครงสร้างเว็บสารบัญครบแล้ว
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm text-slate-800/90">
-                  ใช้โครงนี้ขึ้น Vercel ได้ทันที จากนั้นค่อยเติมข้อมูลฐานจริง
-                  ตั้ง JSON / Markdown / CMS ได้ตามสะดวก พร้อมเพิ่มแผนที่
-                  และเครื่องมือที่ React รองรับ
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <a
-                  className="rounded-full bg-gradient-to-r from-amber-300 to-orange-500 px-6 py-3 text-sm font-semibold text-slate-950 shadow-lg shadow-amber-500/30 transition hover:translate-y-[-2px]"
-                  href="#master-index"
-                >
-                  กลับสารบัญ
-                </a>
-                <a
-                  className="rounded-full border border-white/15 px-6 py-3 text-sm font-semibold text-amber-100 transition hover:border-amber-300/70 hover:text-amber-50"
-                  href="#tools"
-                >
-                  เตรียมทำ Tools
-                </a>
-              </div>
-            </div>
-            <div className="mt-6 grid gap-4 text-xs text-slate-800/80 sm:grid-cols-2 md:grid-cols-4">
-              {[
-                "โครงสร้าง 14 หมวดครบ",
-                "Tailwind + Next 16",
-                "พร้อม build / deploy",
-                "พื้นหลัง Wuxia หมึกทอง",
-              ].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-xl border border-black/10 bg-white/60 px-4 py-3 text-center text-[#c7a35a]"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
       </main>
     </div>
   );
