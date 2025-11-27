@@ -20,6 +20,11 @@ export default function Home() {
       desc: "Offensive / General / Movement และเอฟเฟกต์ครบถ้วน",
     },
     {
+      id: "tips",
+      title: "10 Tips ผู้เล่นใหม่",
+      desc: "สรุป 10 ข้อควรรู้ ฟาร์มไว ใช้ระบบคุ้ม",
+    },
+    {
       id: "gear-sets",
       title: "Gear Sets",
       desc: "โบนัสเซ็ต 2/4 ชิ้น สำหรับบิลด์และสายการเล่น",
@@ -398,6 +403,9 @@ export default function Home() {
             <a href="#lore" className="hover:text-amber-200">
               Lore
             </a>
+              <a href="/map" className="hover:text-amber-200">
+              Map
+            </a>
             <a href="#martial" className="hover:text-amber-200">
               สายวิชา
             </a>
@@ -473,7 +481,9 @@ export default function Home() {
                           ? "/mystic-skills"
                           : item.id === "gear-sets"
                             ? "/gear-sets"
-                            : `#${item.id}`
+                            : item.id === "tips"
+                              ? "/tips"
+                              : `#${item.id}`
                   }
                   className="relative overflow-hidden rounded-2xl border border-black/10 bg-white/70 p-4 transition hover:-translate-y-1 hover:border-amber-200/70 hover:shadow-lg hover:shadow-amber-500/20"
                 >
