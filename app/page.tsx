@@ -10,6 +10,11 @@ export default function Home() {
       desc: "ธาตุหลัก ปราณเฉพาะ และบิลด์แนะนำพร้อมสเตตัส",
     },
     {
+      id: "inner-ways",
+      title: "Inner Ways (กำลังภายใน)",
+      desc: "Passive/ปราณเฉพาะ, วิธีอัปเกรด, Path & บัฟสำคัญ",
+    },
+    {
       id: "lore",
       title: "ฐานข้อมูลโลก / Lore Codex",
       desc: "เรื่องเล่า Jianghu, สำนัก, ตัวละคร, เมือง, เหตุการณ์",
@@ -449,9 +454,13 @@ export default function Home() {
               {masterIndex.map((item, idx) => (
                 <a
                   key={item.id}
-                    href={
-                      item.id === "attributes" ? "/attributes" : `#${item.id}`
-                    }
+                  href={
+                    item.id === "attributes"
+                      ? "/attributes"
+                      : item.id === "inner-ways"
+                        ? "/inner-ways"
+                        : `#${item.id}`
+                  }
                   className="relative overflow-hidden rounded-2xl border border-black/10 bg-white/70 p-4 transition hover:-translate-y-1 hover:border-amber-200/70 hover:shadow-lg hover:shadow-amber-500/20"
                 >
                   <div
