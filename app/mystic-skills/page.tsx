@@ -258,6 +258,22 @@ const categories: MysticCategory[] = [
 export default function MysticSkillsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0d1320] via-[#101622] to-[#0f1520] text-slate-100">
+      <div className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-gradient-to-b from-[#0d1320]/90 via-[#0d1320]/70 to-transparent px-6 py-3 text-sm text-slate-100 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <a href="/" className="flex items-center gap-2 font-semibold tracking-wide text-amber-100">
+            <span className="text-lg">风</span>
+            <span>Where Winds Meet | Game Codex</span>
+          </a>
+          <div className="flex items-center gap-4">
+            <a href="/" className="hover:text-amber-100">
+              หน้าแรก
+            </a>
+            <a href="/#master-index" className="hover:text-amber-100">
+              สารบัญใหญ่
+            </a>
+          </div>
+        </div>
+      </div>
       <div className="relative isolate overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center opacity-70"

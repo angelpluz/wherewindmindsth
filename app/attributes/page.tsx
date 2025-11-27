@@ -5,6 +5,22 @@ const heroBg = "/img/topview.png";
 export default function AttributesPage() {
   return (
     <div className="relative min-h-screen overflow-hidden bg-gradient-to-b from-[#2f3138] via-[#f3f1ed] to-[#f9f8f6] text-slate-900">
+      <div className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-gradient-to-b from-[#0d1320]/90 via-[#0d1320]/70 to-transparent px-6 py-3 text-sm text-slate-100 backdrop-blur-md">
+        <div className="mx-auto flex max-w-6xl items-center justify-between">
+          <a href="/" className="flex items-center gap-2 font-semibold tracking-wide text-amber-100">
+            <span className="text-lg">风</span>
+            <span>Where Winds Meet | Game Codex</span>
+          </a>
+          <div className="flex items-center gap-4">
+            <a href="/" className="hover:text-amber-100">
+              หน้าแรก
+            </a>
+            <a href="/#master-index" className="hover:text-amber-100">
+              สารบัญใหญ่
+            </a>
+          </div>
+        </div>
+      </div>
       <div className="pointer-events-none absolute inset-0 opacity-60">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(216,180,106,0.12),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(95,118,160,0.16),transparent_30%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-[#2f3138]/80 via-transparent to-transparent" />

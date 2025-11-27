@@ -20,6 +20,11 @@ export default function Home() {
       desc: "Offensive / General / Movement และเอฟเฟกต์ครบถ้วน",
     },
     {
+      id: "gear-sets",
+      title: "Gear Sets",
+      desc: "โบนัสเซ็ต 2/4 ชิ้น สำหรับบิลด์และสายการเล่น",
+    },
+    {
       id: "lore",
       title: "ฐานข้อมูลโลก / Lore Codex",
       desc: "เรื่องเล่า Jianghu, สำนัก, ตัวละคร, เมือง, เหตุการณ์",
@@ -466,7 +471,9 @@ export default function Home() {
                         ? "/inner-ways"
                         : item.id === "mystic-skills"
                           ? "/mystic-skills"
-                          : `#${item.id}`
+                          : item.id === "gear-sets"
+                            ? "/gear-sets"
+                            : `#${item.id}`
                   }
                   className="relative overflow-hidden rounded-2xl border border-black/10 bg-white/70 p-4 transition hover:-translate-y-1 hover:border-amber-200/70 hover:shadow-lg hover:shadow-amber-500/20"
                 >
