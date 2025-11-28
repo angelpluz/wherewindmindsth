@@ -1,61 +1,24 @@
 import mysql from "mysql2/promise";
 
-type DbConfig = {
-  host: string;
-  port: number;
-  user: string;
-  password: string;
-  database: string;
-};
+const host = process.env.DB_HOST ?? process.env.MYSQL_HOST ?? "localhost";
+const port = Number(process.env.DB_PORT ?? process.env.MYSQL_PORT ?? 3306);
+const user = process.env.DB_USER ?? process.env.MYSQL_USER;
+const password = process.env.DB_PASSWORD ?? process.env.MYSQL_PASSWORD;
+const database =
+  process.env.DB_NAME ?? process.env.MYSQL_DATABASE ?? process.env.MYSQL_DB ?? "shopdbpython";
 
-function requiredEnv(key: string): string {
-  const value = process.env[key];
-  if (!value) {
-    throw new Error(`Missing env: ${key}`);
-  }
-  return value;
-}
+// Shared MySQL pool for API handlers
+export const pool = mysql.createPool({
+  host,
+  port,
+  user,
+  password,
+  database,
+  waitForConnections: true,
+  connectionLimit: 10,
+});
 
-function loadConfig(): DbConfig {
-  return {
-    host: requiredEnv("MYSQL_HOST"),
-    port: Number(process.env.MYSQL_PORT ?? 3306),
-    user: requiredEnv("MYSQL_USER"),
-    password: requiredEnv("MYSQL_PASSWORD"),
-    database: requiredEnv("MYSQL_DATABASE"),
-  };
-}
-
-// Keep a single pool instance across hot reloads.
-const globalForPool = global as unknown as { mysqlPool?: mysql.Pool };
-
-function getPool(): mysql.Pool {
-  if (!globalForPool.mysqlPool) {
-    globalForPool.mysqlPool = mysql.createPool({
-      ...loadConfig(),
-      connectionLimit: 10,
-      waitForConnections: true,
-      queueLimit: 0,
-      timezone: "Z",
-    });
-  }
-  return globalForPool.mysqlPool;
-}
-
-export async function query<T = unknown>(
-  sql: string,
-  params: unknown[] = [],
-): Promise<T[]> {
-  const pool = getPool();
-  const [rows] = await pool.execute<mysql.RowDataPacket[]>(sql, params);
-  return rows as T[];
-}
-
-export async function ping(): Promise<void> {
-  const pool = getPool();
-  await pool.query("SELECT 1");
-}
-
-export function pool(): mysql.Pool {
-  return getPool();
+export async function query<T = unknown>(sql: string, params: any[] = []) {
+  const [rows] = await pool.query<T[]>(sql, params);
+  return rows;
 }

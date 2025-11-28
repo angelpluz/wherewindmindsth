@@ -10,7 +10,8 @@ type Marker = {
   y: number; // percentage 0-100
 };
 
-const mapImage = "/img/map/3Where_Winds_Meet_-_2048.png";
+const mapImageWebp = "/img/map/3Where_Winds_Meet_-_2048.webp";
+const mapImagePng = "/img/map/3Where_Winds_Meet_-_2048.png";
 
 const categories: { id: string; label: string; color: string }[] = [
   { id: "landmark", label: "Landmark", color: "#f3c969" },
@@ -34,12 +35,17 @@ const markers: Marker[] = [
 ];
 
 export default function MapPage() {
+  const minZoom = 0.8;
+  const maxZoom = 10;
   const [zoom, setZoom] = useState(1.1);
   const [translate, setTranslate] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
   const startRef = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
   const [search, setSearch] = useState("");
   const [activeCats, setActiveCats] = useState<string[]>(categories.map((c) => c.id));
+  const [devMode, setDevMode] = useState(false);
+  const [lastCaptured, setLastCaptured] = useState<{ x: number; y: number } | null>(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
 
   const filteredMarkers = useMemo(() => {
     const term = search.toLowerCase();
@@ -53,7 +59,7 @@ export default function MapPage() {
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     const delta = -Math.sign(e.deltaY) * 0.1;
-    setZoom((z) => Math.min(3, Math.max(0.8, Number((z + delta).toFixed(2)))));
+    setZoom((z) => Math.min(maxZoom, Math.max(minZoom, Number((z + delta).toFixed(2)))));
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -76,6 +82,20 @@ export default function MapPage() {
     setActiveCats((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
     );
+  };
+
+  const handleMapClick = (e: React.MouseEvent) => {
+    if (!devMode || !imageRef.current) return;
+    const rect = imageRef.current.getBoundingClientRect();
+    const clickX = e.clientX - rect.left;
+    const clickY = e.clientY - rect.top;
+    if (clickX < 0 || clickY < 0 || clickX > rect.width || clickY > rect.height) return;
+    const xPct = Number(((clickX / rect.width) * 100).toFixed(2));
+    const yPct = Number(((clickY / rect.height) * 100).toFixed(2));
+    setLastCaptured({ x: xPct, y: yPct });
+    // Dev helper: log to console for quick copy
+    // eslint-disable-next-line no-console
+    console.log("Map point", { x: xPct, y: yPct });
   };
 
   const setAllCats = (on: boolean) => {
@@ -116,13 +136,13 @@ export default function MapPage() {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setZoom((z) => Math.min(3, Number((z + 0.15).toFixed(2))))}
+                  onClick={() => setZoom((z) => Math.min(maxZoom, Number((z + 0.15).toFixed(2))))}
                   className="h-8 w-8 rounded-md border border-white/15 bg-white/5 text-lg hover:border-amber-200/60 hover:text-amber-100"
                 >
                   +
                 </button>
                 <button
-                  onClick={() => setZoom((z) => Math.max(0.8, Number((z - 0.15).toFixed(2))))}
+                  onClick={() => setZoom((z) => Math.max(minZoom, Number((z - 0.15).toFixed(2))))}
                   className="h-8 w-8 rounded-md border border-white/15 bg-white/5 text-lg hover:border-amber-200/60 hover:text-amber-100"
                 >
                   −
@@ -137,6 +157,7 @@ export default function MapPage() {
               onMouseMove={handleMouseMove}
               onMouseUp={stopPan}
               onMouseLeave={stopPan}
+              onClick={handleMapClick}
             >
               <div
                 className="absolute inset-0"
@@ -146,7 +167,18 @@ export default function MapPage() {
                   transition: isPanning ? "none" : "transform 120ms ease-out",
                 }}
               >
-                <img src={mapImage} alt="Where Winds Meet map" className="h-full w-full object-contain" />
+                <picture className="block h-full w-full">
+                  <source srcSet={mapImageWebp} type="image/webp" />
+                  <img
+                    ref={imageRef}
+                    src={mapImagePng}
+                    alt="Where Winds Meet map"
+                    className="h-full w-full object-contain"
+                    loading="lazy"
+                    decoding="async"
+                    draggable={false}
+                  />
+                </picture>
 
                 {filteredMarkers.map((m) => {
                   const cat = categories.find((c) => c.id === m.category);
@@ -179,34 +211,52 @@ export default function MapPage() {
               <p className="kicker text-right text-xs uppercase tracking-[0.2em] text-amber-100">Map Controls</p>
               <h1 className="heading-contrast text-right text-2xl text-[#d6b16c]">Interactive Map</h1>
               <p className="mt-1 text-right text-sm text-slate-200/80">
-                เลือกหมวด ค้นหา และคลิก marker เพื่อดูชื่อจุดบนแผนที่ 2048x2048
+                WebP 8K (~0.4MB) for viewing, PNG fallback available
               </p>
               <div className="mt-4 flex flex-wrap justify-end gap-2 text-xs">
-              <button
-                onClick={() => setAllCats(true)}
-                className="rounded-full border border-amber-200/60 px-3 py-1 text-amber-100 hover:bg-amber-200/15"
-              >
-                Show all
-              </button>
-              <button
-                onClick={() => setAllCats(false)}
-                className="rounded-full border border-white/30 px-3 py-1 text-white hover:border-amber-200/60 hover:text-amber-100"
-              >
-                Hide all
-              </button>
-              <button
-                onClick={resetView}
-                className="rounded-full border border-white/20 px-3 py-1 text-white hover:border-amber-200/60 hover:text-amber-100"
-              >
-                Reset view
-              </button>
+                <button
+                  onClick={() => setAllCats(true)}
+                  className="rounded-full border border-amber-200/60 px-3 py-1 text-amber-100 hover:bg-amber-200/15"
+                >
+                  Show all
+                </button>
+                <button
+                  onClick={() => setAllCats(false)}
+                  className="rounded-full border border-white/30 px-3 py-1 text-white hover:border-amber-200/60 hover:text-amber-100"
+                >
+                  Hide all
+                </button>
+                <button
+                  onClick={resetView}
+                  className="rounded-full border border-white/20 px-3 py-1 text-white hover:border-amber-200/60 hover:text-amber-100"
+                >
+                  Reset view
+                </button>
                 <a
-                  href={mapImage}
+                  href={mapImageWebp}
                   download
                   className="rounded-full border border-white/30 px-3 py-1 text-white hover:border-amber-200/60 hover:text-amber-100"
                 >
                   ดาวน์โหลดภาพ
                 </a>
+              </div>
+
+              <div className="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200">
+                <label className="flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-amber-300"
+                    checked={devMode}
+                    onChange={(e) => setDevMode(e.target.checked)}
+                  />
+                  Dev capture mode
+                </label>
+                <div className="text-right">
+                  <p className="text-[11px] uppercase tracking-[0.1em] text-amber-200/80">Last point</p>
+                  <p className="font-mono text-[12px] text-white/90">
+                    {lastCaptured ? `${lastCaptured.x}%, ${lastCaptured.y}%` : "-"}
+                  </p>
+                </div>
               </div>
 
               <div className="mt-4 space-y-3">
