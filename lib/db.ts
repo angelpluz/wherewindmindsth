@@ -18,7 +18,18 @@ export const pool = mysql.createPool({
   connectionLimit: 10,
 });
 
-export async function query<T = unknown>(sql: string, params: any[] = []) {
-  const [rows] = await pool.query<T[]>(sql, params);
-  return rows;
+export async function query(sql: string, params: any[] = []) {
+  const [rows] = await pool.query(sql, params);
+  return rows as any;
+}
+
+// Simple connection liveness check used by health endpoint
+export async function ping() {
+  const conn = await pool.getConnection();
+  try {
+    await conn.ping();
+    return true;
+  } finally {
+    conn.release();
+  }
 }

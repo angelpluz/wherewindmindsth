@@ -1,157 +1,123 @@
 import { NextResponse } from "next/server";
-import { pool, query } from "@/lib/db";
+import fs from "fs/promises";
+import path from "path";
+import mysql from "mysql2/promise";
 
-import crypto from "crypto";
+const CACHE_PATH = path.join(process.cwd(), "public", "data", "markers-cache.json");
+const DEFAULT_TABLE = "wwm_markers";
 
-export async function GET() {
+const ENDPOINT_KEYS = [
+  "list",
+  "batu",
+  "aneh",
+  "cave",
+  "soundofheaven",
+  "windofpath",
+  "windofsacriface",
+  "relic",
+  "cat",
+  "injustice",
+  "adventure",
+  "meow",
+  "knowladge",
+  "story",
+  "moon",
+  "uncounted",
+  "precious",
+  "gourmet",
+  "special",
+  "toilet",
+  "healing",
+  "makeafriend",
+  "argument",
+  "book",
+  "guard",
+  "stronghold",
+  "boss",
+  "materialart",
+  "pemancing",
+  "mabuk",
+  "kartu",
+  "panah",
+  "melodi",
+  "tebakan",
+  "gulat",
+  "mysticlist",
+  "innerwayslist",
+];
+
+let pool: mysql.Pool | null = null;
+
+function getPool() {
+  if (pool) return pool;
+  const { DB_HOST, DB_PORT = "3306", DB_USER, DB_PASSWORD, DB_NAME } = process.env;
+  if (!DB_HOST || !DB_USER || !DB_NAME) {
+    throw new Error("DB connection env missing: DB_HOST, DB_USER, DB_PASSWORD, DB_NAME.");
+  }
+  pool = mysql.createPool({
+    host: DB_HOST,
+    port: Number(DB_PORT),
+    user: DB_USER,
+    password: DB_PASSWORD,
+    database: DB_NAME,
+    connectionLimit: 5,
+  });
+  return pool;
+}
+
+async function readFromDb(endpoints: string[], tableName: string) {
+  const conn = await getPool().getConnection();
   try {
-    const markers = await query<{
-      id: string;
-      title: string;
-      description: string | null;
-      x_pct: number;
-      y_pct: number;
-      min_zoom: number | null;
-      max_zoom: number | null;
-      is_active: 0 | 1;
-      category_slug: string;
-      category_name: string;
-      category_color: string | null;
-    }>(
-      `SELECT 
-         m.id,
-         m.title,
-         m.description,
-         m.x_pct,
-         m.y_pct,
-         m.min_zoom,
-         m.max_zoom,
-         m.is_active,
-         c.slug AS category_slug,
-         c.name AS category_name,
-         c.color AS category_color
-       FROM markers_wwm m
-       JOIN categories_wwm c ON c.id = m.category_id
-       WHERE m.is_active = 1
-       ORDER BY m.created_at DESC`,
-    );
-
-    const media = await query<{ marker_id: string; url: string; type: string }>(
-      "SELECT marker_id, url, type FROM marker_media_wwm",
-    );
-
-    const markersWithMedia = markers.map((m) => ({
-      ...m,
-      media: media.filter((mm) => mm.marker_id === m.id),
-    }));
-
-    return NextResponse.json({ markers: markersWithMedia });
-  } catch (error) {
-    console.error("[GET /api/markers]", error);
-    return NextResponse.json({ error: "Failed to load markers" }, { status: 500 });
+    let sql = `SELECT source, id, name, category_id, lat, lng, description, payload FROM \`${tableName}\``;
+    let params: any[] = [];
+    if (endpoints.length) {
+      const placeholders = endpoints.map(() => "?").join(",");
+      sql += ` WHERE source IN (${placeholders})`;
+      params = endpoints;
+    }
+    const [rows] = await conn.query(sql, params);
+    const result: Record<string, Record<string, any>> = {};
+    (rows as any[]).forEach((row) => {
+      const source = row.source as string;
+      if (!result[source]) result[source] = {};
+      result[source][row.id] = {
+        id: row.id,
+        name: row.name || "",
+        category_id: row.category_id || "",
+        lat: row.lat != null ? String(row.lat) : "",
+        lng: row.lng != null ? String(row.lng) : "",
+        desc: row.description || "",
+        ...((typeof row.payload === "object" && row.payload !== null) ? row.payload : {}),
+      };
+    });
+    return result;
+  } finally {
+    conn.release();
   }
 }
 
-type MarkerInput = {
-  title?: string;
-  description?: string | null;
-  category?: string; // slug
-  x_pct?: number;
-  y_pct?: number;
-  min_zoom?: number | null;
-  max_zoom?: number | null;
-  is_active?: boolean;
-  image_url?: string | null;
-};
-
-function ensureAdmin(req: Request) {
-  const adminKey = process.env.ADMIN_DASHBOARD_PASSWORD;
-  if (!adminKey) return true; // no password set, allow
-  const headerKey = req.headers.get("x-admin-key");
-  const cookieName = process.env.ADMIN_COOKIE_NAME ?? "poll_admin";
-  const cookieHeader = req.headers.get("cookie") ?? "";
-  const fromCookie = cookieHeader
-    .split(";")
-    .map((c) => c.trim())
-    .find((c) => c.startsWith(`${cookieName}=`))
-    ?.split("=")[1];
-  return headerKey === adminKey || fromCookie === adminKey;
+async function readCache() {
+  const raw = await fs.readFile(CACHE_PATH, "utf-8");
+  return JSON.parse(raw);
 }
 
 export async function POST(req: Request) {
+  const body = await req.json().catch(() => ({}));
+  const endpoints: string[] =
+    Array.isArray(body?.endpoints) && body.endpoints.length ? body.endpoints : ENDPOINT_KEYS;
+  const tableName = body?.table || DEFAULT_TABLE;
+
   try {
-    if (!ensureAdmin(req)) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const data = await readFromDb(endpoints, tableName);
+    return NextResponse.json(data, { status: 200 });
+  } catch (err: any) {
+    console.warn("Markers API: DB read failed, fallback to cache if available.", err?.message ?? err);
+  }
 
-    const body = (await req.json()) as MarkerInput;
-    const { title, description, category, x_pct, y_pct, min_zoom, max_zoom, is_active, image_url } =
-      body;
-
-    if (!title || !category || x_pct === undefined || y_pct === undefined) {
-      return NextResponse.json(
-        { error: "title, category, x_pct, y_pct are required" },
-        { status: 400 },
-      );
-    }
-
-    const x = Number(x_pct);
-    const y = Number(y_pct);
-    if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > 100 || y < 0 || y > 100) {
-      return NextResponse.json(
-        { error: "x_pct and y_pct must be between 0 and 100" },
-        { status: 400 },
-      );
-    }
-
-    const minZoomVal = min_zoom === undefined ? null : Number(min_zoom);
-    const maxZoomVal = max_zoom === undefined ? null : Number(max_zoom);
-
-    const cats = await query<{ id: string }>(
-      "SELECT id FROM categories_wwm WHERE slug = ? LIMIT 1",
-      [category],
-    );
-    if (!cats.length) {
-      return NextResponse.json({ error: "category not found" }, { status: 400 });
-    }
-    const categoryId = cats[0].id;
-
-    const markerId = crypto.randomUUID();
-
-    await pool.execute(
-      `INSERT INTO markers_wwm
-        (id, title, description, category_id, x_pct, y_pct, min_zoom, max_zoom, is_active)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        markerId,
-        title,
-        description ?? null,
-        categoryId,
-        x,
-        y,
-        minZoomVal,
-        maxZoomVal,
-        is_active === undefined ? true : Boolean(is_active),
-      ],
-    );
-
-    if (image_url) {
-      await pool.execute(
-        `INSERT INTO marker_media_wwm (id, marker_id, type, url, caption)
-         VALUES (?, ?, ?, ?, ?)`,
-        [crypto.randomUUID(), markerId, "screenshot", image_url, null],
-      );
-    }
-
-    return NextResponse.json(
-      {
-        ok: true,
-        id: markerId,
-      },
-      { status: 201 },
-    );
-  } catch (error) {
-    console.error("[POST /api/markers]", error);
-    return NextResponse.json({ error: "Failed to create marker" }, { status: 500 });
+  try {
+    const cached = await readCache();
+    return NextResponse.json(cached, { status: 200 });
+  } catch (err: any) {
+    return NextResponse.json({ error: "Failed to load markers (DB and cache unavailable)" }, { status: 500 });
   }
 }

@@ -1,397 +1,437 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 
-type Marker = {
+type RawMarker = {
   id: string;
-  name: string;
-  category: string;
-  x: number; // percentage 0-100
-  y: number; // percentage 0-100
-  color?: string | null;
-  media?: { url: string; type: string }[];
+  name?: string;
+  lat?: string;
+  lng?: string;
+  category_id?: string;
+  desc?: string;
 };
 
-const mapImageWebp = "/img/map/3Where_Winds_Meet_-_2048.webp";
-const mapImagePng = "/img/map/3Where_Winds_Meet_-_2048.png";
+type MarkerPoint = {
+  id: string;
+  name: string;
+  lat: number;
+  lng: number;
+  category: string;
+  source: string;
+};
 
-const fallbackCategories: { id: string; label: string; color: string }[] = [
-  { id: "landmark", label: "Landmark", color: "#f3c969" },
-  { id: "shop", label: "Shop", color: "#7dd3fc" },
-  { id: "dungeon", label: "Dungeon / Cave", color: "#c084fc" },
-  { id: "boss", label: "Boss", color: "#fb7185" },
-  { id: "resource", label: "Resource", color: "#4ade80" },
-  { id: "chest", label: "Chest", color: "#9ca3af" },
+const ENDPOINT_KEYS = [
+  "list",
+  "batu",
+  "aneh",
+  "cave",
+  "soundofheaven",
+  "windofpath",
+  "windofsacriface",
+  "relic",
+  "cat",
+  "injustice",
+  "adventure",
+  "meow",
+  "knowladge",
+  "story",
+  "moon",
+  "uncounted",
+  "precious",
+  "gourmet",
+  "special",
+  "toilet",
+  "healing",
+  "makeafriend",
+  "argument",
+  "book",
+  "guard",
+  "stronghold",
+  "boss",
+  "materialart",
+  "pemancing",
+  "mabuk",
+  "kartu",
+  "panah",
+  "melodi",
+  "tebakan",
+  "gulat",
+  "mysticlist",
+  "innerwayslist",
 ];
 
-const fallbackMarkers: Marker[] = [
-  { id: "m1", name: "Old Capital Gate", category: "landmark", x: 48.5, y: 58 },
-  { id: "m2", name: "Mountain Shrine", category: "landmark", x: 62, y: 32 },
-  { id: "m3", name: "Boundary Stone", category: "resource", x: 54, y: 46 },
-  { id: "m4", name: "Fishing Spot", category: "resource", x: 29, y: 67 },
-  { id: "m5", name: "Twin Rapids Cave", category: "dungeon", x: 36, y: 42 },
-  { id: "m6", name: "Shadow Puppet Shop", category: "shop", x: 44, y: 61 },
-  { id: "m7", name: "Horse Ranch", category: "shop", x: 41, y: 69 },
-  { id: "m8", name: "Spirit Beast Boss", category: "boss", x: 58, y: 54 },
-  { id: "m9", name: "Ruined Tower", category: "landmark", x: 70, y: 63 },
-  { id: "m10", name: "Hidden Grotto", category: "dungeon", x: 27, y: 55 },
-];
+const endpointLabels: Record<string, string> = {
+  list: "Treasure",
+  batu: "Teleport",
+  aneh: "Oddities",
+  cave: "Cave",
+  soundofheaven: "Universal Harmony",
+  windofpath: "Hidden Path",
+  windofsacriface: "Ghost Fire",
+  relic: "Antique",
+  cat: "Cat Play",
+  injustice: "Injustice",
+  adventure: "Adventure",
+  meow: "Meow Treasure",
+  knowladge: "Knowledge",
+  story: "Story",
+  moon: "Moon Shadow",
+  uncounted: "Uncounted",
+  precious: "Precious",
+  gourmet: "Gourmet",
+  special: "Special",
+  toilet: "Toilet",
+  healing: "Healing",
+  makeafriend: "Make a friend",
+  argument: "Argument",
+  book: "Book",
+  guard: "Guard",
+  stronghold: "Stronghold",
+  boss: "Boss",
+  materialart: "Material Art",
+  pemancing: "Fishing",
+  mabuk: "Pot",
+  kartu: "Card",
+  panah: "Archery",
+  melodi: "Melody",
+  tebakan: "Riddle",
+  gulat: "Sumo",
+  mysticlist: "Mystic",
+  innerwayslist: "Inner Way",
+};
+
+const endpointColors: Record<string, string> = {
+  list: "#f3c969",
+  batu: "#38bdf8",
+  aneh: "#f472b6",
+  boss: "#fb7185",
+  cave: "#a855f7",
+  materialart: "#22c55e",
+  mysticlist: "#c084fc",
+  innerwayslist: "#f97316",
+};
+
+const iconUrls: Record<string, string> = {
+  list: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/petiharta.webp",
+  batu: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/batuteleport.webp",
+  boss: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/boss.webp",
+  adventure: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/adventure.webp",
+  cave: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/gua.webp",
+  materialart: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/jutsu.webp",
+  aneh: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/strange.webp",
+  soundofheaven: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/soundofheaven.webp",
+  windofpath: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/windingpathinsearchoftranquility.webp",
+  windofsacriface: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/windsacrifaceandfiretour.webp",
+  relic: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/relic.webp",
+  cat: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/catplay.webp",
+  injustice: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/injustic.webp",
+  meow: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/meow.webp",
+  knowladge: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/knoweverything.webp",
+  story: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/lightanddarkstory.webp",
+  moon: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/moonshadowoverlap.webp",
+  uncounted: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/default.png",
+  precious: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/treasureinpalmofyourhand.webp",
+  gourmet: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/gourmetfood.webp",
+  special: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/specialmuscles.webp",
+  toilet: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/toilet.webp",
+  healing: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/healing.webp",
+  makeafriend: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/makefriend.webp",
+  argument: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/argument.webp",
+  book: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/book.webp",
+  guard: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/guard.webp",
+  stronghold: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/strongehold.webp",
+  pemancing: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/fishing.webp",
+  mabuk: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/pot.webp",
+  kartu: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/miaodao.webp",
+  panah: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/archer.webp",
+  melodi: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/melody.webp",
+  tebakan: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/riddle.webp",
+  gulat: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/summo.webp",
+  mysticlist: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/tehnik.webp",
+  innerwayslist: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/innerway.webp",
+};
+
+function useLeafletScript() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if ((window as any).L) {
+      setReady(true);
+      return;
+    }
+    const link = document.createElement("link");
+    link.rel = "stylesheet";
+    link.href = "https://unpkg.com/leaflet/dist/leaflet.css";
+    document.head.appendChild(link);
+
+    const script = document.createElement("script");
+    script.src = "https://unpkg.com/leaflet/dist/leaflet.js";
+    script.async = true;
+    script.onload = () => setReady(true);
+    script.onerror = () => setReady(false);
+    document.body.appendChild(script);
+  }, []);
+  return ready;
+}
+
+async function fetchBatch(): Promise<Record<string, RawMarker[]>> {
+  const resp = await fetch("/api/markers", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ endpoints: ENDPOINT_KEYS }),
+  });
+  if (!resp.ok) throw new Error(`API error ${resp.status}`);
+  const json = await resp.json();
+  const normalized: Record<string, RawMarker[]> = {};
+  Object.entries(json as Record<string, Record<string, RawMarker>>).forEach(([key, value]) => {
+    normalized[key] = value ? Object.values(value) : [];
+  });
+  return normalized;
+}
+
+function convertMarkers(raw: Record<string, RawMarker[]>): MarkerPoint[] {
+  const markers: MarkerPoint[] = [];
+  Object.entries(raw).forEach(([key, list]) => {
+    list.forEach((item) => {
+      const lat = Number(item.lat);
+      const lng = Number(item.lng);
+      if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+      markers.push({
+        id: item.id,
+        name: item.name || "Unknown",
+        lat,
+        lng,
+        category: item.category_id || "n/a",
+        source: key,
+      });
+    });
+  });
+  return markers;
+}
 
 export default function MapPage() {
-  const minZoom = 0.8;
-  const maxZoom = 10;
-  const [zoom, setZoom] = useState(1.1);
-  const [translate, setTranslate] = useState({ x: 0, y: 0 });
-  const [isPanning, setIsPanning] = useState(false);
-  const startRef = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
-  const [search, setSearch] = useState("");
-  const [categories, setCategories] = useState(fallbackCategories);
-  const [markers, setMarkers] = useState<Marker[]>(fallbackMarkers);
-  const [activeCats, setActiveCats] = useState<string[]>(fallbackCategories.map((c) => c.id));
-  const [devMode, setDevMode] = useState(false);
-  const [lastCaptured, setLastCaptured] = useState<{ x: number; y: number } | null>(null);
-  const imageRef = useRef<HTMLImageElement | null>(null);
-  const [loadingData, setLoadingData] = useState(false);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const mapRef = useRef<HTMLDivElement | null>(null);
+  const mapInstance = useRef<any>(null);
+  const iconCache = useRef<Record<string, any>>({});
+  const [status, setStatus] = useState<"idle" | "loading" | "error" | "ready">("idle");
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [markers, setMarkers] = useState<MarkerPoint[]>([]);
+  const [activeSources, setActiveSources] = useState<string[]>(ENDPOINT_KEYS);
+  const leafletReady = useLeafletScript();
 
   useEffect(() => {
-    const loadData = async () => {
+    if (!leafletReady || !mapRef.current || mapInstance.current) return;
+    const L = (window as any).L;
+    const TILE_BOUNDS = { minX: 0, maxX: 256, minY: 0, maxY: 256 };
+    const PAN_BUFFER = 50;
+    const mapBounds = [
+      [TILE_BOUNDS.minY - PAN_BUFFER, TILE_BOUNDS.minX - PAN_BUFFER],
+      [TILE_BOUNDS.maxY + PAN_BUFFER, TILE_BOUNDS.maxX + PAN_BUFFER],
+    ];
+
+    const crsSimple = L.extend({}, L.CRS.Simple, {
+      transformation: new L.Transformation(1, 0, 1, 0),
+    });
+
+    const map = L.map(mapRef.current, {
+      crs: crsSimple,
+      minZoom: 3,
+      maxZoom: 8,
+      maxBounds: mapBounds,
+      maxBoundsViscosity: 0.7,
+      zoomControl: true,
+      attributionControl: false,
+    }).setView([128, 180], 5);
+
+    L.tileLayer("https://ik.imagekit.io/k3lv5clxs/wherewindmeet/tiles/{z}_{x}_{y}.webp?v=20251121", {
+      minZoom: 3,
+      maxZoom: 8,
+      maxNativeZoom: 7,
+      noWrap: true,
+      crossOrigin: true,
+      errorTileUrl: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/tiles/7_127_126.webp",
+    }).addTo(map);
+
+    mapInstance.current = map;
+  }, [leafletReady]);
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      setStatus("loading");
+      setErrorMsg(null);
       try {
-        setLoadingData(true);
-        setLoadError(null);
-        const [catRes, markerRes] = await Promise.all([fetch("/api/categories"), fetch("/api/markers")]);
-        const catsJson = await catRes.json();
-        const markerJson = await markerRes.json();
-        if (!catRes.ok || !markerRes.ok) {
-          throw new Error(catsJson?.error || markerJson?.error || "load failed");
-        }
-        const dbCats =
-          (catsJson.categories as { id: string; slug: string; name: string; color?: string | null }[]) ?? [];
-        if (dbCats.length) {
-          setCategories(
-            dbCats.map((c) => ({
-              id: c.slug,
-              label: c.name,
-              color: c.color ?? fallbackCategories.find((f) => f.id === c.slug)?.color ?? "#e2e8f0",
-            })),
-          );
-          setActiveCats(dbCats.map((c) => c.slug));
-        }
-        const dbMarkers =
-          (markerJson.markers as {
-            id: string;
-            title: string;
-            description?: string | null;
-            x_pct: number;
-            y_pct: number;
-            category_slug: string;
-            category_color?: string | null;
-          }[]) ?? [];
-        if (dbMarkers.length) {
-          setMarkers(
-            dbMarkers.map((m) => ({
-              id: m.id,
-              name: m.title,
-              category: m.category_slug,
-              x: m.x_pct,
-              y: m.y_pct,
-              color:
-                m.category_color ??
-                dbCats.find((c) => c.slug === m.category_slug)?.color ??
-                fallbackCategories.find((f) => f.id === m.category_slug)?.color,
-            })),
-          );
-        }
+        const raw = await fetchBatch();
+        if (cancelled) return;
+        const pts = convertMarkers(raw);
+        setMarkers(pts);
+        setStatus("ready");
       } catch (err: any) {
-        console.error(err);
-        setLoadError("โหลดข้อมูลจากฐานไม่สำเร็จ แสดงข้อมูล mock แทน");
-        setCategories(fallbackCategories);
-        setMarkers(fallbackMarkers);
-        setActiveCats(fallbackCategories.map((c) => c.id));
-      } finally {
-        setLoadingData(false);
+        if (cancelled) return;
+        setErrorMsg(err?.message || "Fetch error");
+        setStatus("error");
       }
+    }
+    load();
+    return () => {
+      cancelled = true;
     };
-    loadData();
   }, []);
 
-  const filteredMarkers = useMemo(() => {
-    const term = search.toLowerCase();
-    return markers.filter(
-      (m) =>
-        activeCats.includes(m.category) &&
-        (term.length === 0 || m.name.toLowerCase().includes(term)),
-    );
-  }, [markers, search, activeCats]);
+  useEffect(() => {
+    const map = mapInstance.current;
+    if (!map) return;
+    const L = (window as any).L;
+    if (!L) return;
+    map.eachLayer((layer: any) => {
+      if (layer instanceof L.Marker || layer instanceof L.CircleMarker) {
+        map.removeLayer(layer);
+      }
+    });
+    const filtered = markers.filter((m) => activeSources.includes(m.source));
+    filtered.forEach((m) => {
+      const color = endpointColors[m.source] || "#f8fafc";
+      const url = iconUrls[m.source];
+      let icon: any = null;
+      if (url) {
+        if (!iconCache.current[url]) {
+          iconCache.current[url] = L.icon({
+            iconUrl: url,
+            iconSize: [36, 36],
+            iconAnchor: [18, 36],
+            popupAnchor: [0, -28],
+            className: "wwm-marker",
+          });
+        }
+        icon = iconCache.current[url];
+      }
+      (icon
+        ? L.marker([m.lat, m.lng], { icon })
+        : L.circleMarker([m.lat, m.lng], {
+            radius: 6,
+            color,
+            fillColor: color,
+            fillOpacity: 0.85,
+            weight: 1,
+          })
+      )
+        .bindPopup(`<strong>${m.name}</strong><br/>Source: ${endpointLabels[m.source] || m.source}`)
+        .addTo(map);
+    });
+  }, [markers, activeSources]);
 
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = -Math.sign(e.deltaY) * 0.1;
-    setZoom((z) => Math.min(maxZoom, Math.max(minZoom, Number((z + delta).toFixed(2)))));
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsPanning(true);
-    startRef.current = { x: e.clientX, y: e.clientY, tx: translate.x, ty: translate.y };
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isPanning || !startRef.current) return;
-    const dx = e.clientX - startRef.current.x;
-    const dy = e.clientY - startRef.current.y;
-    setTranslate({ x: startRef.current.tx + dx, y: startRef.current.ty + dy });
-  };
-
-  const stopPan = () => {
-    setIsPanning(false);
-  };
-
-  const toggleCategory = (id: string) => {
-    setActiveCats((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
-    );
-  };
-
-  const handleMapClick = (e: React.MouseEvent) => {
-    if (!devMode || !imageRef.current) return;
-    const rect = imageRef.current.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const clickY = e.clientY - rect.top;
-    if (clickX < 0 || clickY < 0 || clickX > rect.width || clickY > rect.height) return;
-    const xPct = Number(((clickX / rect.width) * 100).toFixed(2));
-    const yPct = Number(((clickY / rect.height) * 100).toFixed(2));
-    setLastCaptured({ x: xPct, y: yPct });
-    // Dev helper: log to console for quick copy
-    // eslint-disable-next-line no-console
-    console.log("Map point", { x: xPct, y: yPct });
-  };
-
-  const setAllCats = (on: boolean) => {
-    setActiveCats(on ? categories.map((c) => c.id) : []);
-  };
-
-  const resetView = () => {
-    setZoom(1.1);
-    setTranslate({ x: 0, y: 0 });
-  };
+  const sourceList = useMemo(
+    () =>
+      ENDPOINT_KEYS.map((key) => ({
+        key,
+        label: endpointLabels[key] || key,
+        icon: iconUrls[key],
+      })),
+    [],
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0d1320] via-[#0f1624] to-[#0b1220] text-slate-100">
       <div className="fixed inset-x-0 top-0 z-50 border-b border-white/10 bg-gradient-to-b from-[#0d1320]/90 via-[#0d1320]/70 to-transparent px-6 py-3 text-sm text-slate-100 backdrop-blur-md">
         <div className="mx-auto flex max-w-6xl items-center justify-between">
-          <a href="/" className="flex items-center gap-2 font-semibold tracking-wide text-amber-100">
-            <span className="text-lg">⛰️</span>
+          <Link href="/" className="flex items-center gap-2 font-semibold tracking-wide text-amber-100">
+            <span className="text-lg">🌬️</span>
             <span>Where Winds Meet | Game Codex</span>
-          </a>
-          <div className="flex items-center gap-4">
-            <a href="/" className="hover:text-amber-100">
-              หน้าแรก
-            </a>
-            <a href="/#master-index" className="hover:text-amber-100">
-              สารบัญใหญ่
-            </a>
-          </div>
+          </Link>
         </div>
       </div>
 
       <main className="relative mx-auto max-w-6xl px-6 pb-14 pt-24">
-        <div className="flex flex-col gap-4 lg:flex-row">
-          <section className="flex-1 rounded-2xl border border-white/10 bg-[#0c1420]/80 shadow-xl shadow-black/40">
+        <div className="grid gap-4 lg:grid-cols-[1fr_320px] items-start">
+          <div className="rounded-2xl border border-white/10 bg-[#0c1420]/80 shadow-xl shadow-black/40">
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 text-sm">
               <div className="flex items-center gap-2 text-slate-200">
                 <span className="text-base text-amber-100">🗺️</span>
-                <span>Drag to pan · Scroll to zoom</span>
+                <span>Live map (tiles from imagekit, data from DB/worker)</span>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setZoom((z) => Math.min(maxZoom, Number((z + 0.15).toFixed(2))))}
-                  className="h-8 w-8 rounded-md border border-white/15 bg-white/5 text-lg hover:border-amber-200/60 hover:text-amber-100"
-                >
-                  +
-                </button>
-                <button
-                  onClick={() => setZoom((z) => Math.max(minZoom, Number((z - 0.15).toFixed(2))))}
-                  className="h-8 w-8 rounded-md border border-white/15 bg-white/5 text-lg hover:border-amber-200/60 hover:text-amber-100"
-                >
-                  −
-                </button>
+              <div className="text-xs text-slate-400">Zoom & drag to explore</div>
+            </div>
+            <div ref={mapRef} className="h-[70vh] w-full rounded-b-2xl" />
+          </div>
+
+          <div className="h-[70vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1420]/80 p-4 shadow-lg shadow-black/40">
+            <div className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2 border border-white/10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-amber-200/40 to-amber-500/40 border border-amber-200/40">
+                <img
+                  src="https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/faviconV2.ico?updatedAt=1762922428848"
+                  alt="Where Winds Meet"
+                  className="h-7 w-7"
+                />
+              </div>
+              <div className="leading-tight">
+                <p className="text-[10px] uppercase tracking-[0.28em] text-amber-100">Where Winds Meet</p>
+                <p className="text-base font-semibold text-amber-50">Game Codex</p>
               </div>
             </div>
-
-            <div
-              className="relative h-[70vh] overflow-hidden rounded-b-2xl bg-[#0a101a]"
-              onWheel={handleWheel}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={stopPan}
-              onMouseLeave={stopPan}
-              onClick={handleMapClick}
-            >
-              <div
-                className="absolute inset-0"
-                style={{
-                  transform: `translate(${translate.x}px, ${translate.y}px) scale(${zoom})`,
-                  transformOrigin: "center center",
-                  transition: isPanning ? "none" : "transform 120ms ease-out",
-                }}
+            <div className="mt-3">
+              <p className="text-xs uppercase tracking-[0.2em] text-amber-100">Data source</p>
+              <h2 className="mt-1 text-lg font-semibold text-amber-50">API Filters</h2>
+            </div>
+            <div className="mt-3 flex gap-2 text-xs">
+              <button
+                onClick={() => setActiveSources(ENDPOINT_KEYS)}
+                className="rounded-md border border-amber-200/60 bg-amber-200/10 px-3 py-1 text-amber-100 hover:bg-amber-200/20"
               >
-                <picture className="block h-full w-full">
-                  <source srcSet={mapImageWebp} type="image/webp" />
-                  <img
-                    ref={imageRef}
-                    src={mapImagePng}
-                    alt="Where Winds Meet map"
-                    className="h-full w-full object-contain"
-                    loading="lazy"
-                    decoding="async"
-                    draggable={false}
-                  />
-                </picture>
-
-                {filteredMarkers.map((m) => {
-                  const cat = categories.find((c) => c.id === m.category);
-                  return (
-                    <div
-                      key={m.id}
-                      className="absolute cursor-pointer text-xs font-semibold text-slate-900"
-                      style={{
-                        left: `${m.x}%`,
-                        top: `${m.y}%`,
-                        transform: "translate(-50%, -50%)",
-                      }}
-                      title={m.name}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const firstImage =
-                          m.media?.find((mm) => mm.type === "screenshot") ?? m.media?.[0];
-                        if (firstImage?.url) {
-                          window.open(firstImage.url, "_blank", "noopener,noreferrer");
-                        }
-                      }}
-                    >
-                      <div
-                        className="rounded-full px-2 py-1 shadow-lg shadow-black/30"
-                        style={{ backgroundColor: m.color ?? cat?.color ?? "#e2e8f0" }}
-                      >
-                        {m.name}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                Use all
+              </button>
+              <button
+                onClick={() => setActiveSources([])}
+                className="rounded-md border border-white/15 bg-white/5 px-3 py-1 text-slate-200 hover:border-amber-200/60 hover:text-amber-100"
+              >
+                Clear all
+              </button>
             </div>
-          </section>
 
-          <aside className="w-full lg:w-[360px] lg:pl-2">
-            <div className="rounded-2xl border border-white/10 bg-black/30 p-4 shadow-lg shadow-black/40">
-              <p className="kicker text-right text-xs uppercase tracking-[0.2em] text-amber-100">Map Controls</p>
-              <h1 className="heading-contrast text-right text-2xl text-[#d6b16c]">Interactive Map</h1>
-              <p className="mt-1 text-right text-sm text-slate-200/80">
-                WebP 8K (~0.4MB) for viewing, PNG fallback available
-              </p>
-              <div className="mt-4 flex flex-wrap justify-end gap-2 text-xs">
-                <button
-                  onClick={() => setAllCats(true)}
-                  className="rounded-full border border-amber-200/60 px-3 py-1 text-amber-100 hover:bg-amber-200/15"
-                >
-                  Show all
-                </button>
-                <button
-                  onClick={() => setAllCats(false)}
-                  className="rounded-full border border-white/30 px-3 py-1 text-white hover:border-amber-200/60 hover:text-amber-100"
-                >
-                  Hide all
-                </button>
-                <button
-                  onClick={resetView}
-                  className="rounded-full border border-white/20 px-3 py-1 text-white hover:border-amber-200/60 hover:text-amber-100"
-                >
-                  Reset view
-                </button>
-                <a
-                  href={mapImageWebp}
-                  download
-                  className="rounded-full border border-white/30 px-3 py-1 text-white hover:border-amber-200/60 hover:text-amber-100"
-                >
-                  Download map
-                </a>
-              </div>
+            {status === "loading" && (
+              <p className="mt-3 text-xs text-slate-200">Loading markers...</p>
+            )}
+            {status === "error" && (
+              <p className="mt-3 text-xs text-rose-200">Error: {errorMsg}</p>
+            )}
 
-              {loadingData && (
-                <p className="mt-2 text-right text-xs text-white/70">Loading markers from database...</p>
-              )}
-              {loadError && (
-                <p className="mt-2 text-right text-xs text-amber-200/80">{loadError}</p>
-              )}
-
-              <div className="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200">
-                <label className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    className="h-4 w-4 accent-amber-300"
-                    checked={devMode}
-                    onChange={(e) => setDevMode(e.target.checked)}
-                  />
-                  Dev capture mode
-                </label>
-                <div className="text-right">
-                  <p className="text-[11px] uppercase tracking-[0.1em] text-amber-200/80">Last point</p>
-                  <p className="font-mono text-[12px] text-white/90">
-                    {lastCaptured ? `${lastCaptured.x}%, ${lastCaptured.y}%` : "-"}
-                  </p>
-                </div>
-              </div>
-              <div className="mt-4 space-y-3">
-                <div>
-                  <label className="text-xs text-slate-300">Search</label>
-                  <div className="mt-1 flex gap-2">
-                    <input
-                      value={search}
-                      onChange={(e) => setSearch(e.target.value)}
-                      placeholder="Search e.g. boss, shop"
-                      className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-amber-200/60 focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <p className="text-xs text-slate-300">Categories</p>
-                  <div className="mt-2 space-y-2">
-                    {categories.map((c) => {
-                      const count = markers.filter((m) => m.category === c.id).length;
-                      const active = activeCats.includes(c.id);
-                      return (
-                        <button
-                          key={c.id}
-                          onClick={() => toggleCategory(c.id)}
-                          className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-left text-sm ${
-                            active
-                              ? "border-amber-200/60 bg-amber-200/10 text-white"
-                              : "border-white/10 bg-white/0 text-slate-200 hover:border-amber-200/60"
-                          }`}
-                        >
-                          <span className="flex items-center gap-2">
-                            <span
-                              className="inline-block h-3 w-3 rounded-full"
-                              style={{ backgroundColor: c.color }}
-                            />
-                            {c.label}
-                          </span>
-                          <span className="text-xs text-white/70">{count}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
+            <div className="mt-4 space-y-2">
+              {sourceList.map((s) => {
+                const active = activeSources.includes(s.key);
+                const color = endpointColors[s.key] || "#e2e8f0";
+                return (
+                  <button
+                    key={s.key}
+                    onClick={() =>
+                      setActiveSources((prev) =>
+                        prev.includes(s.key) ? prev.filter((x) => x !== s.key) : [...prev, s.key],
+                      )
+                    }
+                    className={`flex w-full items-center justify-between rounded-lg border px-3 py-2 text-sm transition ${
+                      active
+                        ? "border-amber-200/60 bg-amber-200/10 text-white"
+                        : "border-white/10 bg-white/0 text-slate-200 hover:border-amber-200/60"
+                    }`}
+                  >
+                    <span className="flex items-center gap-3">
+                      {s.icon ? (
+                        <img
+                          src={s.icon}
+                          alt={s.label}
+                          className="h-6 w-6 rounded-full bg-black/20 object-contain p-1"
+                        />
+                      ) : (
+                        <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: color }} />
+                      )}
+                      {s.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
-          </aside>
+          </div>
         </div>
       </main>
     </div>
   );
 }
-
-
-
-

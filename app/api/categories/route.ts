@@ -10,9 +10,9 @@ type CategoryRow = {
 
 export async function GET() {
   try {
-    const categories = await query<CategoryRow>(
+    const categories = (await query(
       "SELECT id, slug, name, color FROM categories_wwm ORDER BY name ASC",
-    );
+    )) as CategoryRow[];
     return NextResponse.json({ categories });
   } catch (error) {
     console.error("[GET /api/categories]", error);
