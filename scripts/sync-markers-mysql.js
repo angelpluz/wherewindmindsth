@@ -39,7 +39,7 @@ const DATA_ENDPOINTS = {
   toilet: `${API_BASE}/toilet`,
   healing: `${API_BASE}/healingpot`,
   makeafriend: `${API_BASE}/makeafriend`,
-  argument: `${API_BASE}/arrgument`,
+  Gib-a-Gab: `${API_BASE}/arrgument`,
   book: `${API_BASE}/book`,
   guard: `${API_BASE}/guard`,
   stronghold: `${API_BASE}/strongehold`,

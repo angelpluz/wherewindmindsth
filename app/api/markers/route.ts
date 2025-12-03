@@ -29,7 +29,7 @@ const ENDPOINT_KEYS = [
   "toilet",
   "healing",
   "makeafriend",
-  "argument",
+  "Gib-a-Gab",
   "book",
   "guard",
   "stronghold",
