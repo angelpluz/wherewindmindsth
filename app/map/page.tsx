@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Marker = {
   id: string;
@@ -8,20 +8,23 @@ type Marker = {
   category: string;
   x: number; // percentage 0-100
   y: number; // percentage 0-100
+  color?: string | null;
+  media?: { url: string; type: string }[];
 };
 
 const mapImageWebp = "/img/map/3Where_Winds_Meet_-_2048.webp";
 const mapImagePng = "/img/map/3Where_Winds_Meet_-_2048.png";
 
-const categories: { id: string; label: string; color: string }[] = [
+const fallbackCategories: { id: string; label: string; color: string }[] = [
   { id: "landmark", label: "Landmark", color: "#f3c969" },
   { id: "shop", label: "Shop", color: "#7dd3fc" },
   { id: "dungeon", label: "Dungeon / Cave", color: "#c084fc" },
   { id: "boss", label: "Boss", color: "#fb7185" },
   { id: "resource", label: "Resource", color: "#4ade80" },
+  { id: "chest", label: "Chest", color: "#9ca3af" },
 ];
 
-const markers: Marker[] = [
+const fallbackMarkers: Marker[] = [
   { id: "m1", name: "Old Capital Gate", category: "landmark", x: 48.5, y: 58 },
   { id: "m2", name: "Mountain Shrine", category: "landmark", x: 62, y: 32 },
   { id: "m3", name: "Boundary Stone", category: "resource", x: 54, y: 46 },
@@ -42,10 +45,75 @@ export default function MapPage() {
   const [isPanning, setIsPanning] = useState(false);
   const startRef = useRef<{ x: number; y: number; tx: number; ty: number } | null>(null);
   const [search, setSearch] = useState("");
-  const [activeCats, setActiveCats] = useState<string[]>(categories.map((c) => c.id));
+  const [categories, setCategories] = useState(fallbackCategories);
+  const [markers, setMarkers] = useState<Marker[]>(fallbackMarkers);
+  const [activeCats, setActiveCats] = useState<string[]>(fallbackCategories.map((c) => c.id));
   const [devMode, setDevMode] = useState(false);
   const [lastCaptured, setLastCaptured] = useState<{ x: number; y: number } | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
+  const [loadingData, setLoadingData] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        setLoadingData(true);
+        setLoadError(null);
+        const [catRes, markerRes] = await Promise.all([fetch("/api/categories"), fetch("/api/markers")]);
+        const catsJson = await catRes.json();
+        const markerJson = await markerRes.json();
+        if (!catRes.ok || !markerRes.ok) {
+          throw new Error(catsJson?.error || markerJson?.error || "load failed");
+        }
+        const dbCats =
+          (catsJson.categories as { id: string; slug: string; name: string; color?: string | null }[]) ?? [];
+        if (dbCats.length) {
+          setCategories(
+            dbCats.map((c) => ({
+              id: c.slug,
+              label: c.name,
+              color: c.color ?? fallbackCategories.find((f) => f.id === c.slug)?.color ?? "#e2e8f0",
+            })),
+          );
+          setActiveCats(dbCats.map((c) => c.slug));
+        }
+        const dbMarkers =
+          (markerJson.markers as {
+            id: string;
+            title: string;
+            description?: string | null;
+            x_pct: number;
+            y_pct: number;
+            category_slug: string;
+            category_color?: string | null;
+          }[]) ?? [];
+        if (dbMarkers.length) {
+          setMarkers(
+            dbMarkers.map((m) => ({
+              id: m.id,
+              name: m.title,
+              category: m.category_slug,
+              x: m.x_pct,
+              y: m.y_pct,
+              color:
+                m.category_color ??
+                dbCats.find((c) => c.slug === m.category_slug)?.color ??
+                fallbackCategories.find((f) => f.id === m.category_slug)?.color,
+            })),
+          );
+        }
+      } catch (err: any) {
+        console.error(err);
+        setLoadError("โหลดข้อมูลจากฐานไม่สำเร็จ แสดงข้อมูล mock แทน");
+        setCategories(fallbackCategories);
+        setMarkers(fallbackMarkers);
+        setActiveCats(fallbackCategories.map((c) => c.id));
+      } finally {
+        setLoadingData(false);
+      }
+    };
+    loadData();
+  }, []);
 
   const filteredMarkers = useMemo(() => {
     const term = search.toLowerCase();
@@ -54,7 +122,7 @@ export default function MapPage() {
         activeCats.includes(m.category) &&
         (term.length === 0 || m.name.toLowerCase().includes(term)),
     );
-  }, [search, activeCats]);
+  }, [markers, search, activeCats]);
 
   const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
@@ -192,10 +260,18 @@ export default function MapPage() {
                         transform: "translate(-50%, -50%)",
                       }}
                       title={m.name}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const firstImage =
+                          m.media?.find((mm) => mm.type === "screenshot") ?? m.media?.[0];
+                        if (firstImage?.url) {
+                          window.open(firstImage.url, "_blank", "noopener,noreferrer");
+                        }
+                      }}
                     >
                       <div
                         className="rounded-full px-2 py-1 shadow-lg shadow-black/30"
-                        style={{ backgroundColor: cat?.color ?? "#e2e8f0" }}
+                        style={{ backgroundColor: m.color ?? cat?.color ?? "#e2e8f0" }}
                       >
                         {m.name}
                       </div>
@@ -237,9 +313,16 @@ export default function MapPage() {
                   download
                   className="rounded-full border border-white/30 px-3 py-1 text-white hover:border-amber-200/60 hover:text-amber-100"
                 >
-                  ดาวน์โหลดภาพ
+                  Download map
                 </a>
               </div>
+
+              {loadingData && (
+                <p className="mt-2 text-right text-xs text-white/70">Loading markers from database...</p>
+              )}
+              {loadError && (
+                <p className="mt-2 text-right text-xs text-amber-200/80">{loadError}</p>
+              )}
 
               <div className="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-slate-200">
                 <label className="flex items-center gap-2">
@@ -258,7 +341,6 @@ export default function MapPage() {
                   </p>
                 </div>
               </div>
-
               <div className="mt-4 space-y-3">
                 <div>
                   <label className="text-xs text-slate-300">Search</label>
@@ -266,14 +348,14 @@ export default function MapPage() {
                     <input
                       value={search}
                       onChange={(e) => setSearch(e.target.value)}
-                      placeholder="ค้นหาชื่อจุด เช่น boss, shop"
+                      placeholder="Search e.g. boss, shop"
                       className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-white placeholder:text-white/40 focus:border-amber-200/60 focus:outline-none"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <p className="text-xs text-slate-300">หมวดหมู่</p>
+                  <p className="text-xs text-slate-300">Categories</p>
                   <div className="mt-2 space-y-2">
                     {categories.map((c) => {
                       const count = markers.filter((m) => m.category === c.id).length;
@@ -309,3 +391,7 @@ export default function MapPage() {
     </div>
   );
 }
+
+
+
+

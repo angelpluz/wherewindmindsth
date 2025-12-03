@@ -1,23 +1,23 @@
 import { NextResponse } from "next/server";
 import { pool, query } from "@/lib/db";
 
-type MarkerRow = {
-  id: string;
-  title: string;
-  description: string | null;
-  x_pct: number;
-  y_pct: number;
-  min_zoom: number | null;
-  max_zoom: number | null;
-  is_active: 0 | 1;
-  category_slug: string;
-  category_name: string;
-  category_color: string | null;
-};
+import crypto from "crypto";
 
 export async function GET() {
   try {
-    const markers = await query<MarkerRow>(
+    const markers = await query<{
+      id: string;
+      title: string;
+      description: string | null;
+      x_pct: number;
+      y_pct: number;
+      min_zoom: number | null;
+      max_zoom: number | null;
+      is_active: 0 | 1;
+      category_slug: string;
+      category_name: string;
+      category_color: string | null;
+    }>(
       `SELECT 
          m.id,
          m.title,
@@ -35,7 +35,17 @@ export async function GET() {
        WHERE m.is_active = 1
        ORDER BY m.created_at DESC`,
     );
-    return NextResponse.json({ markers });
+
+    const media = await query<{ marker_id: string; url: string; type: string }>(
+      "SELECT marker_id, url, type FROM marker_media_wwm",
+    );
+
+    const markersWithMedia = markers.map((m) => ({
+      ...m,
+      media: media.filter((mm) => mm.marker_id === m.id),
+    }));
+
+    return NextResponse.json({ markers: markersWithMedia });
   } catch (error) {
     console.error("[GET /api/markers]", error);
     return NextResponse.json({ error: "Failed to load markers" }, { status: 500 });
@@ -51,6 +61,7 @@ type MarkerInput = {
   min_zoom?: number | null;
   max_zoom?: number | null;
   is_active?: boolean;
+  image_url?: string | null;
 };
 
 function ensureAdmin(req: Request) {
@@ -74,7 +85,8 @@ export async function POST(req: Request) {
     }
 
     const body = (await req.json()) as MarkerInput;
-    const { title, description, category, x_pct, y_pct, min_zoom, max_zoom, is_active } = body;
+    const { title, description, category, x_pct, y_pct, min_zoom, max_zoom, is_active, image_url } =
+      body;
 
     if (!title || !category || x_pct === undefined || y_pct === undefined) {
       return NextResponse.json(
@@ -104,11 +116,14 @@ export async function POST(req: Request) {
     }
     const categoryId = cats[0].id;
 
-    const [result] = await pool.execute(
+    const markerId = crypto.randomUUID();
+
+    await pool.execute(
       `INSERT INTO markers_wwm
         (id, title, description, category_id, x_pct, y_pct, min_zoom, max_zoom, is_active)
-       VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
+        markerId,
         title,
         description ?? null,
         categoryId,
@@ -120,12 +135,18 @@ export async function POST(req: Request) {
       ],
     );
 
-    const insertId = (result as { insertId?: string }).insertId ?? null;
+    if (image_url) {
+      await pool.execute(
+        `INSERT INTO marker_media_wwm (id, marker_id, type, url, caption)
+         VALUES (?, ?, ?, ?, ?)`,
+        [crypto.randomUUID(), markerId, "screenshot", image_url, null],
+      );
+    }
 
     return NextResponse.json(
       {
         ok: true,
-        id: insertId,
+        id: markerId,
       },
       { status: 201 },
     );

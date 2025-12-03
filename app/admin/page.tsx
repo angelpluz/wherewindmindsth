@@ -18,6 +18,7 @@ type FormState = {
   min_zoom: number | string | null;
   max_zoom: number | string | null;
   is_active: boolean;
+  image_url: string;
 };
 
 export default function AdminMarkers() {
@@ -33,6 +34,7 @@ export default function AdminMarkers() {
     min_zoom: null,
     max_zoom: null,
     is_active: true,
+    image_url: "",
   });
   const [status, setStatus] = useState("");
   const [error, setError] = useState("");
@@ -84,6 +86,7 @@ export default function AdminMarkers() {
             ? null
             : Number(form.max_zoom),
         is_active: form.is_active,
+        image_url: form.image_url?.trim() || undefined,
       };
 
       if (
@@ -177,6 +180,16 @@ export default function AdminMarkers() {
             </div>
           </div>
 
+          <div>
+            <label className="text-xs text-slate-300">Image URL (optional)</label>
+            <input
+              value={form.image_url}
+              onChange={(e) => setForm((prev) => ({ ...prev, image_url: e.target.value }))}
+              className="mt-1 w-full rounded-lg border border-white/10 bg-[#0c1420] px-3 py-2 text-sm text-white placeholder:text-white/30 focus:border-amber-200/60 focus:outline-none"
+              placeholder="https://..."
+            />
+          </div>
+
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <label className="text-xs text-slate-300">X %</label>
@@ -260,18 +273,19 @@ export default function AdminMarkers() {
             <button
               type="submit"
               className="rounded-lg border border-amber-200/60 px-4 py-2 text-amber-100 hover:bg-amber-200/10"
-            >
-              เพิ่ม Marker
-            </button>
-            {status && <span className="text-emerald-300 text-sm">{status}</span>}
-            {error && <span className="text-rose-300 text-sm">{error}</span>}
-          </div>
-        </form>
-
-        <div className="mt-6 text-sm text-slate-400">
-          <p>Tip: ใช้ Dev capture mode บนหน้าแผนที่ คลิกแล้ว copy x/y% มาแปะได้เลย</p>
-        </div>
+        >
+          เพิ่ม Marker
+        </button>
+        {status && <span className="text-emerald-300 text-sm">{status}</span>}
+        {error && <span className="text-rose-300 text-sm">{error}</span>}
       </div>
+    </form>
+
+    <div className="mt-6 text-sm text-slate-400">
+      <p>Tip: ใส่ Image URL ถ้ามีสกรีนช็อต จะกดดูได้จากจุดบนแผนที่</p>
+      <p>Tip: ใช้ Dev capture mode บนหน้าแผนที่ คลิกแล้ว copy x/y% มาแปะได้เลย</p>
     </div>
+  </div>
+</div>
   );
 }
