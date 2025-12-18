@@ -8,6 +8,8 @@
   --card: rgba(255, 255, 255, 0.82);
   --stroke: rgba(0, 0, 0, 0.08);
   --glow: 0 24px 70px rgba(62, 71, 90, 0.22);
+  --font-body: "Noto Sans Thai", "Noto Sans", system-ui, -apple-system, sans-serif;
+  --font-display: "Cinzel", "Times New Roman", serif;
 }
 
 @theme inline {

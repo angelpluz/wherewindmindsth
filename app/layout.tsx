@@ -1,18 +1,5 @@
 import type { Metadata } from "next";
-import { Cinzel, Noto_Sans_Thai } from "next/font/google";
 import "./globals.css";
-
-const display = Cinzel({
-  subsets: ["latin"],
-  weight: ["600", "700", "900"],
-  variable: "--font-display",
-});
-
-const body = Noto_Sans_Thai({
-  subsets: ["latin", "thai"],
-  variable: "--font-body",
-  weight: ["400", "500", "600", "700"],
-});
 
 export const metadata: Metadata = {
   title: "Where Winds Meet | Wuxia Worldbook",
@@ -27,9 +14,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
-      <body className={`${display.variable} ${body.variable} antialiased`}>
-        {children}
-      </body>
+      <body className="antialiased">{children}</body>
     </html>
   );
 }
