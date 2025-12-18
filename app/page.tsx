@@ -403,7 +403,7 @@ export default function Home() {
             <a href="#lore" className="hover:text-amber-200">
               Lore
             </a>
-              <a href="/map" className="hover:text-amber-200">
+              <a href="/#" className="hover:text-amber-200">
               Map
             </a>
             <a href="#martial" className="hover:text-amber-200">
