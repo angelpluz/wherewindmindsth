@@ -84,7 +84,7 @@ const endpointLabels: Record<string, string> = {
   toilet: "Toilet",
   healing: "Healing",
   makeafriend: "Make a friend",
-  "Gib-a-Gab": "Gib-a-Gab",
+  Gib-a-Gab: "Gib-a-Gab",
   book: "Book",
   guard: "Guard",
   Outpost: "Outpost",
@@ -101,8 +101,6 @@ const endpointLabels: Record<string, string> = {
   innerwayslist: "Inner Way",
 };
 
-const MAP_MAINTENANCE = true;
-
 const endpointColors: Record<string, string> = {
   list: "#f3c969",
   batu: "#38bdf8",
@@ -114,35 +112,45 @@ const endpointColors: Record<string, string> = {
   innerwayslist: "#f97316",
 };
 
-const MAP_IMAGE_PATH = "/img/map/3Where_Winds_Meet_-_2048.webp";
-
-function buildSvgIcon(label: string, color: string) {
-  const text = label.slice(0, 2).toUpperCase();
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 48 48">
-      <defs>
-        <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-          <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="rgba(0,0,0,0.35)" />
-        </filter>
-      </defs>
-      <g filter="url(#shadow)">
-        <rect x="6" y="6" width="36" height="36" rx="12" fill="${color}" />
-        <rect x="10" y="10" width="28" height="28" rx="10" fill="rgba(0,0,0,0.12)" />
-      </g>
-      <text x="24" y="28" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="14" fill="#0b1220" font-weight="700">${text}</text>
-    </svg>
-  `;
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
-}
-
-const iconUrls: Record<string, string> = {};
-ENDPOINT_KEYS.forEach((key) => {
-  const label = endpointLabels[key] || key;
-  const color = endpointColors[key] || "#e2e8f0";
-  iconUrls[key] = buildSvgIcon(label, color);
-});
-
-const BRAND_ICON = buildSvgIcon("WW", "#38bdf8");
+const iconUrls: Record<string, string> = {
+  list: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/petiharta.webp",
+  batu: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/batuteleport.webp",
+  boss: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/boss.webp",
+  adventure: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/adventure.webp",
+  cave: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/gua.webp",
+  materialart: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/jutsu.webp",
+  aneh: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/strange.webp",
+  soundofheaven: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/soundofheaven.webp",
+  windofpath: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/windingpathinsearchoftranquility.webp",
+  windofsacriface: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/windsacrifaceandfiretour.webp",
+  relic: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/relic.webp",
+  cat: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/catplay.webp",
+  injustice: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/injustic.webp",
+  meow: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/meow.webp",
+  knowladge: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/knoweverything.webp",
+  story: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/lightanddarkstory.webp",
+  moon: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/moonshadowoverlap.webp",
+  uncounted: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/default.png",
+  precious: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/treasureinpalmofyourhand.webp",
+  gourmet: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/gourmetfood.webp",
+  special: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/specialmuscles.webp",
+  toilet: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/toilet.webp",
+  healing: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/healing.webp",
+  makeafriend: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/makefriend.webp",
+  Gib-a-Gab: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/Gib-a-Gab.webp",
+  book: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/book.webp",
+  guard: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/guard.webp",
+  Outpost: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/strongehold.webp",
+  pemancing: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/fishing.webp",
+  mabuk: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/pot.webp",
+  kartu: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/miaodao.webp",
+  panah: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/archer.webp",
+  melodi: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/melody.webp",
+  tebakan: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/riddle.webp",
+  gulat: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/summo.webp",
+  mysticlist: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/tehnik.webp",
+  innerwayslist: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/innerway.webp",
+};
 
 function useLeafletScript() {
   const [ready, setReady] = useState(false);
@@ -154,11 +162,11 @@ function useLeafletScript() {
     }
     const link = document.createElement("link");
     link.rel = "stylesheet";
-    link.href = "/vendor/leaflet/leaflet.css";
+    link.href = "https://unpkg.com/leaflet/dist/leaflet.css";
     document.head.appendChild(link);
 
     const script = document.createElement("script");
-    script.src = "/vendor/leaflet/leaflet.js";
+    script.src = "https://unpkg.com/leaflet/dist/leaflet.js";
     script.async = true;
     script.onload = () => setReady(true);
     script.onerror = () => setReady(false);
@@ -203,27 +211,6 @@ function convertMarkers(raw: Record<string, RawMarker[]>): MarkerPoint[] {
 }
 
 export default function MapPage() {
-  if (MAP_MAINTENANCE) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-[#0d1320] via-[#0f1624] to-[#0b1220] text-slate-100 flex items-center justify-center px-6">
-        <div className="max-w-md text-center space-y-3">
-          <div className="text-3xl">🛠️</div>
-          <h1 className="text-2xl font-semibold text-amber-100">Map temporarily offline</h1>
-          <p className="text-sm text-slate-300">
-            We hit the image provider rate limit (429). The interactive map will be back once the quota resets or we
-            finish copying the tiles/icons to our own host.
-          </p>
-          <Link
-            href="/"
-            className="inline-flex items-center justify-center rounded-lg border border-amber-200/60 bg-amber-200/10 px-4 py-2 text-amber-100 hover:bg-amber-200/20"
-          >
-            กลับหน้าแรก
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
   const mapRef = useRef<HTMLDivElement | null>(null);
   const mapInstance = useRef<any>(null);
   const iconCache = useRef<Record<string, any>>({});
@@ -242,10 +229,6 @@ export default function MapPage() {
       [TILE_BOUNDS.minY - PAN_BUFFER, TILE_BOUNDS.minX - PAN_BUFFER],
       [TILE_BOUNDS.maxY + PAN_BUFFER, TILE_BOUNDS.maxX + PAN_BUFFER],
     ];
-    const imageBounds = [
-      [TILE_BOUNDS.minY, TILE_BOUNDS.minX],
-      [TILE_BOUNDS.maxY, TILE_BOUNDS.maxX],
-    ];
 
     const crsSimple = L.extend({}, L.CRS.Simple, {
       transformation: new L.Transformation(1, 0, 1, 0),
@@ -261,9 +244,13 @@ export default function MapPage() {
       attributionControl: false,
     }).setView([128, 180], 5);
 
-    L.imageOverlay(MAP_IMAGE_PATH, imageBounds, {
+    L.tileLayer("https://ik.imagekit.io/k3lv5clxs/wherewindmeet/tiles/{z}_{x}_{y}.webp?v=20251121", {
+      minZoom: 3,
+      maxZoom: 8,
+      maxNativeZoom: 7,
+      noWrap: true,
       crossOrigin: true,
-      opacity: 1,
+      errorTileUrl: "https://ik.imagekit.io/k3lv5clxs/wherewindmeet/tiles/7_127_126.webp",
     }).addTo(map);
 
     mapInstance.current = map;
@@ -361,7 +348,7 @@ export default function MapPage() {
             <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 text-sm">
               <div className="flex items-center gap-2 text-slate-200">
                 <span className="text-base text-amber-100">🗺️</span>
-                <span>Live map (local base image, data from DB/worker)</span>
+                <span>Live map (tiles from imagekit, data from DB/worker)</span>
               </div>
               <div className="text-xs text-slate-400">Zoom & drag to explore</div>
             </div>
@@ -371,7 +358,11 @@ export default function MapPage() {
           <div className="h-[70vh] overflow-y-auto rounded-2xl border border-white/10 bg-[#0c1420]/80 p-4 shadow-lg shadow-black/40">
             <div className="flex items-center gap-3 rounded-xl bg-white/5 px-3 py-2 border border-white/10">
               <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-amber-200/40 to-amber-500/40 border border-amber-200/40">
-                <img src={BRAND_ICON} alt="Where Winds Meet" className="h-7 w-7" />
+                <img
+                  src="https://ik.imagekit.io/k3lv5clxs/wherewindmeet/Simbol/faviconV2.ico?updatedAt=1762922428848"
+                  alt="Where Winds Meet"
+                  className="h-7 w-7"
+                />
               </div>
               <div className="leading-tight">
                 <p className="text-[10px] uppercase tracking-[0.28em] text-amber-100">Where Winds Meet</p>
